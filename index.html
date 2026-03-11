@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tizz</title>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Parkinsans:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  background: #080916;
+  background-image:
+    linear-gradient(rgba(47,51,80,0.38) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(47,51,80,0.38) 1px, transparent 1px);
+  background-size: 44px 44px;
+  font-family: 'Quicksand', sans-serif;
+  color: #d6daff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px 40px;
+}
+
+#enter {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #080916;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.5s;
+}
+
+#enter.hide { opacity: 0; pointer-events: none; }
+
+#enter p {
+  font-size: 22px;
+  font-weight: 600;
+  color: #252840;
+  font-family: 'Quicksand', sans-serif;
+}
+
+#page {
+  opacity: 0;
+  transition: opacity 0.7s ease 0.15s;
+  width: 100%;
+  max-width: 780px;
+  position: relative;
+  z-index: 5;
+}
+
+#page.show { opacity: 1; }
+
+.card {
+  background: #0d0e1c;
+  border: 1px solid #16182a;
+  border-radius: 20px;
+  overflow: visible;
+}
+
+.top {
+  padding: 36px 36px 32px;
+  border-bottom: 1px solid #16182a;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.pfp {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  background: #111220;
+  border: 1px solid #1c1e34;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #1e2035;
+}
+
+.pfp img { width: 100%; height: 100%; object-fit: cover; }
+
+.name {
+  font-family: 'Parkinsans', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #eef0ff;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.bio {
+  font-size: 15px;
+  font-weight: 500;
+  color: #303454;
+  line-height: 1.5;
+}
+
+.bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.b-cell { padding: 30px 36px 34px; }
+.b-cell:first-child { border-right: 1px solid #16182a; }
+
+.b-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1e2240;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.tags { display: flex; flex-direction: column; gap: 14px; }
+
+.tag {
+  font-size: 18px;
+  font-weight: 600;
+  color: #454870;
+  text-decoration: none;
+  transition: color 0.12s;
+  position: relative;
+  width: fit-content;
+}
+
+.tag:hover { color: #c0c5f0; }
+
+.tag .preview {
+  position: fixed;
+  z-index: 200;
+  width: 200px;
+  border-radius: 8px;
+  border: 1px solid #16182a;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: opacity 0.12s, transform 0.12s;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+}
+
+.tag:hover .preview { opacity: 1; transform: translateY(0); }
+.tag .preview img { width: 100%; height: auto; display: block; }
+
+.slinks { display: flex; flex-direction: column; gap: 14px; }
+
+.slink {
+  font-size: 18px;
+  font-weight: 600;
+  color: #3040aa;
+  text-decoration: none;
+  transition: color 0.12s;
+  width: fit-content;
+}
+
+.slink:hover { color: #818cfb; }
+
+#viz {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.9s ease-in-out;
+  -webkit-mask-image: linear-gradient(to top, black 0%, black 35%, transparent 65%);
+  mask-image: linear-gradient(to top, black 0%, black 35%, transparent 65%);
+}
+
+#viz.show { opacity: 1; }
+
+#player-wrap {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease 1s;
+}
+
+#player-wrap.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+#player-body {
+  width: 360px;
+  background: #0b0c1a;
+  border: 1px solid #16182a;
+  border-top: none;
+  border-radius: 0 0 20px 20px;
+  padding: 20px 22px 22px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1), padding 0.4s;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+#player-body.open {
+  max-height: 400px;
+  padding: 20px 22px 22px;
+}
+
+.p-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+#p-cover {
+  width: 54px;
+  height: 54px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #111220;
+  border: 1px solid #1c1e34;
+  flex-shrink: 0;
+}
+
+.p-meta { flex: 1; min-width: 0; }
+
+#p-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #c0c5f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+
+#p-artist {
+  font-size: 12px;
+  font-weight: 500;
+  color: #353868;
+}
+
+#p-like {
+  background: none;
+  border: none;
+  color: #252840;
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.15s;
+  padding: 4px;
+}
+
+#p-like.liked { color: #818cfb; }
+#p-like:hover { color: #818cfb; }
+
+.p-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.p-bar {
+  height: 3px;
+  background: #16182a;
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+}
+
+#p-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4a5aff, #818cfb);
+  border-radius: 2px;
+  width: 0%;
+  pointer-events: none;
+  transition: width 0.1s linear;
+}
+
+.p-times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #252840;
+  font-weight: 600;
+}
+
+.p-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+}
+
+.p-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #353868;
+  font-size: 17px;
+  padding: 0;
+  transition: color 0.12s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.p-btn:hover { color: #818cfb; }
+.p-btn:active { transform: scale(0.88); }
+
+#p-play {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #4a5aff;
+  color: #fff;
+  font-size: 16px;
+  transition: background 0.15s, transform 0.1s;
+}
+
+#p-play:hover { background: #5f6eff; color: #fff; }
+
+.p-vol {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.p-vol i { color: #252840; font-size: 13px; }
+
+#p-vol-bar {
+  flex: 1;
+  height: 3px;
+  background: #16182a;
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+}
+
+#p-vol-fill {
+  height: 75%;
+  background: #353868;
+  border-radius: 2px;
+  width: 35%;
+  pointer-events: none;
+}
+
+#p-handle {
+  width: 52px;
+  height: 20px;
+  background: #0b0c1a;
+  border: 1px solid #16182a;
+  border-bottom: none;
+  border-radius: 0 0 10px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #1e2035;
+  font-size: 11px;
+  transition: color 0.15s;
+  flex-shrink: 0;
+  order: 2;
+}
+
+#p-handle:hover { color: #818cfb; }
+</style>
+</head>
+<body>
+
+<div id="enter"><p>click to enter</p></div>
+<audio id="audio"></audio>
+<canvas id="viz"></canvas>
+
+<div id="player-wrap">
+  <div id="p-handle"><i class="fa-solid fa-chevron-down"></i></div>
+  <div id="player-body">
+    <div class="p-top">
+      <img id="p-cover" src="https://placehold.co/54/111220/1c1e34?text=">
+      <div class="p-meta">
+        <div id="p-title">—</div>
+        <div id="p-artist">—</div>
+      </div>
+      <button id="p-like"><i class="fa-regular fa-heart"></i></button>
+    </div>
+
+    <div class="p-progress">
+      <div class="p-bar" id="p-bar"><div id="p-fill"></div></div>
+      <div class="p-times"><span id="p-cur">0:00</span><span id="p-dur">0:00</span></div>
+    </div>
+
+    <div class="p-controls">
+      <button class="p-btn" id="p-shuffle"><i class="fa-solid fa-shuffle"></i></button>
+      <button class="p-btn" id="p-prev"><i class="fa-solid fa-backward-step"></i></button>
+      <button class="p-btn" id="p-play"><i class="fa-solid fa-play"></i></button>
+      <button class="p-btn" id="p-next"><i class="fa-solid fa-forward-step"></i></button>
+      <button class="p-btn" id="p-repeat"><i class="fa-solid fa-repeat"></i></button>
+    </div>
+
+    <div class="p-vol">
+      <i class="fa-solid fa-volume-low"></i>
+      <div id="p-vol-bar"><div id="p-vol-fill"></div></div>
+      <i class="fa-solid fa-volume-high"></i>
+    </div>
+  </div>
+</div>
+
+<div id="page">
+  <div class="card">
+
+    <div class="top">
+      <div>
+        <div class="name">tizz</div>
+        <div class="bio">17 - NYC</div>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <div class="b-cell">
+        <div class="b-label">projects</div>
+        <div class="tags">
+          <a href="#" class="tag">gcorner (wip)<div class="preview"><img src="no.gif"></div></a>
+        </div>
+      </div>
+      <div class="b-cell">
+        <div class="b-label">socials</div>
+        <div class="slinks">
+          <a href="https://github.com/@tizzdev" class="slink">github</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const enter = document.getElementById('enter');
+const page = document.getElementById('page');
+const audio = document.getElementById('audio');
+const canvas = document.getElementById('viz');
+const ctx = canvas.getContext('2d');
+const playerWrap = document.getElementById('player-wrap');
+const playerBody = document.getElementById('player-body');
+const pHandle = document.getElementById('p-handle');
+const pPlay = document.getElementById('p-play');
+const pPrev = document.getElementById('p-prev');
+const pNext = document.getElementById('p-next');
+const pShuffle = document.getElementById('p-shuffle');
+const pRepeat = document.getElementById('p-repeat');
+const pLike = document.getElementById('p-like');
+const pFill = document.getElementById('p-fill');
+const pBar = document.getElementById('p-bar');
+const pCur = document.getElementById('p-cur');
+const pDur = document.getElementById('p-dur');
+const pCover = document.getElementById('p-cover');
+const pTitle = document.getElementById('p-title');
+const pArtist = document.getElementById('p-artist');
+const pVolBar = document.getElementById('p-vol-bar');
+const pVolFill = document.getElementById('p-vol-fill');
+
+const tracks = [
+  { title: 'pyke',   artist: 'SUPXR', src: 'song/pyke.mp3', cover: 'song/pyke.png' },
+  { title: 'MISS THE RAGE REVERSED',   artist: 'Goostavo', src: 'song/mtrr.mp3', cover: 'song/mtrr.png' },
+];
+
+let cur = 0, open = false, playing = false, shuffle = false, repeat = false, analyser, dataArray;
+audio.volume = 0.35;
+
+function fmt(s) {
+  if (isNaN(s)) return '0:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return m + ':' + String(sec).padStart(2, '0');
+}
+
+function loadTrack(i) {
+  cur = i;
+  const t = tracks[i];
+  audio.src = t.src;
+  pTitle.textContent = t.title;
+  pArtist.textContent = t.artist;
+  pCover.src = t.cover || '';
+}
+
+function playTrack() {
+  audio.play().catch(()=>{});
+  playing = true;
+  pPlay.innerHTML = '<i class="fa-solid fa-pause"></i>';
+}
+
+function pauseTrack() {
+  audio.pause();
+  playing = false;
+  pPlay.innerHTML = '<i class="fa-solid fa-play"></i>';
+}
+
+pPlay.addEventListener('click', () => playing ? pauseTrack() : playTrack());
+
+pPrev.addEventListener('click', () => {
+  loadTrack((cur - 1 + tracks.length) % tracks.length);
+  playTrack();
+});
+
+pNext.addEventListener('click', () => {
+  const next = shuffle ? Math.floor(Math.random() * tracks.length) : (cur + 1) % tracks.length;
+  loadTrack(next);
+  playTrack();
+});
+
+audio.addEventListener('ended', () => {
+  if (repeat) { audio.currentTime = 0; playTrack(); return; }
+  const next = shuffle ? Math.floor(Math.random() * tracks.length) : (cur + 1) % tracks.length;
+  loadTrack(next);
+  playTrack();
+});
+
+audio.addEventListener('timeupdate', () => {
+  if (!audio.duration) return;
+  const pct = audio.currentTime / audio.duration * 100;
+  pFill.style.width = pct + '%';
+  pCur.textContent = fmt(audio.currentTime);
+  pDur.textContent = fmt(audio.duration);
+});
+
+pBar.addEventListener('click', e => {
+  const r = pBar.getBoundingClientRect();
+  audio.currentTime = ((e.clientX - r.left) / r.width) * audio.duration;
+});
+
+pVolBar.addEventListener('click', e => {
+  const r = pVolBar.getBoundingClientRect();
+  const v = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+  audio.volume = v;
+  pVolFill.style.width = (v * 100) + '%';
+});
+
+pShuffle.addEventListener('click', () => {
+  shuffle = !shuffle;
+  pShuffle.style.color = shuffle ? '#818cfb' : '';
+});
+
+pRepeat.addEventListener('click', () => {
+  repeat = !repeat;
+  pRepeat.style.color = repeat ? '#818cfb' : '';
+});
+
+pLike.addEventListener('click', () => {
+  pLike.classList.toggle('liked');
+  pLike.innerHTML = pLike.classList.contains('liked')
+    ? '<i class="fa-solid fa-heart"></i>'
+    : '<i class="fa-regular fa-heart"></i>';
+});
+
+pHandle.addEventListener('click', () => {
+  open = !open;
+  playerBody.classList.toggle('open', open);
+  pHandle.innerHTML = open
+    ? '<i class="fa-solid fa-chevron-up"></i>'
+    : '<i class="fa-solid fa-chevron-down"></i>';
+});
+
+function initAudio() {
+  const ac = new (window.AudioContext || window.webkitAudioContext)();
+  const src = ac.createMediaElementSource(audio);
+  analyser = ac.createAnalyser();
+  analyser.fftSize = 256;
+  src.connect(analyser);
+  analyser.connect(ac.destination);
+  dataArray = new Uint8Array(analyser.frequencyBinCount);
+}
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+function draw() {
+  requestAnimationFrame(draw);
+  analyser.getByteFrequencyData(dataArray);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const bufferLength = dataArray.length;
+  const barWidth = (canvas.width / bufferLength) * 1.5;
+  let x = 0;
+
+  for (let i = 0; i < bufferLength; i++) {
+    const barHeight = dataArray[i] * (canvas.height / 130);
+    const r = barHeight * 0.3 + (4 * (i / bufferLength)) * 20;
+    const g = barHeight * 0.35 + (4 * (i / bufferLength)) * 15;
+    const b = barHeight + (4 * (i / bufferLength)) * 30;
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+    x += barWidth + 1;
+  }
+}
+
+resize();
+window.addEventListener('resize', resize);
+
+enter.addEventListener('click', () => {
+  enter.classList.add('hide');
+  loadTrack(0);
+  initAudio();
+  playTrack();
+  page.classList.add('show');
+  canvas.classList.add('show');
+  playerWrap.classList.add('show');
+  draw();
+});
+
+document.querySelectorAll('.tag').forEach(tag => {
+  const preview = tag.querySelector('.preview');
+  if (!preview) return;
+  tag.addEventListener('mousemove', e => {
+    let x = e.clientX + 16;
+    let y = e.clientY + 16;
+    if (x + 200 > window.innerWidth) x = e.clientX - 216;
+    if (y + 140 > window.innerHeight) y = e.clientY - 140;
+    preview.style.left = x + 'px';
+    preview.style.top = y + 'px';
+  });
+});
+</script>
+</body>
+</html>
